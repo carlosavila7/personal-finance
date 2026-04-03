@@ -1,3 +1,4 @@
+import json
 import sys
 from datetime import date, time as time_type
 from pathlib import Path
@@ -8,7 +9,6 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 
 import db
 
-PAGE_SIZE = 50
 
 st.set_page_config(page_title="Expenses Dashboard", layout="wide")
 st.title("Expenses Dashboard")
@@ -85,23 +85,21 @@ where = " AND ".join(clauses)
 
 total_rows = conn.execute(f"SELECT COUNT(*) FROM expenses WHERE {where}", params).fetchone()[0]
 
-st.write(f"**{total_rows}** expense(s) found")
-
 if total_rows == 0:
     st.info("No expenses match the current filters.")
     st.stop()
-
-max_pages = max(1, (total_rows + PAGE_SIZE - 1) // PAGE_SIZE)
-page = st.number_input("Page", min_value=1, max_value=max_pages, value=1, step=1)
-offset = (page - 1) * PAGE_SIZE
 
 rows = conn.execute(
     f"SELECT id, date, time, category, sub_category, cost, city, bought_at, "
     f"payment_type, origin, person, is_delivery, is_recurrent, "
     f"credit_card_statement, full_fuel, fuel_price, odometer_reading, description, grouping_tag "
-    f"FROM expenses WHERE {where} ORDER BY date DESC, time DESC LIMIT ? OFFSET ?",
-    params + [PAGE_SIZE, offset],
+    f"FROM expenses WHERE {where} ORDER BY date DESC, time DESC",
+    params,
 ).fetchall()
+
+_raw_size = len(json.dumps([dict(r) for r in rows], default=str).encode())
+_size_str = f"{_raw_size / 1024:.1f} KB" if _raw_size < 1024 ** 2 else f"{_raw_size / 1024 ** 2:.1f} MB"
+st.write(f"**{total_rows}** expense(s) found — {_size_str} loaded")
 
 def _parse_date(value: str | None) -> date | None:
     try:
@@ -138,4 +136,3 @@ st.dataframe(
         "full_fuel": st.column_config.CheckboxColumn("full_fuel"),
     },
 )
-st.caption(f"Page {page} of {max_pages}")
