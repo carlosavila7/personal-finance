@@ -1,0 +1,10 @@
+services:
+  app:
+    build: .
+    ports:
+      - "${PORT:-8501}:8501"
+    env_file:
+      - .env
+    volumes:
+      - ${EXPENSES_DIR}:${EXPENSES_DIR}:ro
+      - ${DB_PATH}:${DB_PATH}
