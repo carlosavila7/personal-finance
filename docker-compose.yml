@@ -7,4 +7,4 @@ services:
       - .env
     volumes:
       - ${EXPENSES_DIR}:${EXPENSES_DIR}:ro
-      - ${DB_PATH}:${DB_PATH}
+      - ${DB_DIR}:${DB_DIR}
