@@ -11,6 +11,8 @@ import db
 st.set_page_config(page_title="Category Analysis", layout="wide")
 st.title("Category Analysis")
 
+exclude_extraordinary = st.toggle("Exclude extraordinary expenses", value=False)
+
 try:
     conn = db.get_connection()
 except ValueError as exc:
@@ -41,6 +43,8 @@ with st.sidebar:
 
 # Shared WHERE clause
 clauses = ["1=1"]
+if exclude_extraordinary:
+    clauses.append("(grouping_tag IS NULL OR grouping_tag = '')")
 params: list = []
 
 if date_start:
